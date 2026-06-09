@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Menu Wegovy">
+<title>Menu Wegovy</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --bg: #f7f5f2; --surface: #ffffff; --surface2: #f0ede8; --border: #e2ddd6;
+  --text: #1a1816; --text2: #6b6560; --text3: #9e9890;
+  --accent: #2d6a4f; --accent-light: #e8f4ee; --accent-text: #1b4332;
+  --warn: #92400e; --warn-light: #fef3c7;
+  --info: #1e40af; --info-light: #eff6ff;
+  --red: #991b1b; --red-light: #fef2f2;
+  --radius: 12px; --radius-sm: 8px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141210; --surface: #1e1c19; --surface2: #272420; --border: #333028;
+    --text: #f0ece6; --text2: #a09890; --text3: #6b6560;
+    --accent: #52b788; --accent-light: #1b3a2a; --accent-text: #b7e4c7;
+    --warn: #f59e0b; --warn-light: #292000;
+    --info: #60a5fa; --info-light: #0f1e3a;
+    --red: #f87171; --red-light: #2a0f0f;
+  }
+}
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: calc(80px + env(safe-area-inset-bottom, 20px)); }
+.header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px; position: sticky; top: 0; z-index: 100; }
+.header-top { display: flex; align-items: center; gap: 10px; }
+.header-icon { width: 36px; height: 36px; background: var(--accent-light); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.header-title { font-size: 18px; font-weight: 600; color: var(--text); }
+.header-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); display: flex; z-index: 100; }
+.nav-btn { flex: 1; padding: 10px 4px calc(14px + env(safe-area-inset-bottom, 10px)); display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: var(--text3); border: none; background: none; cursor: pointer; }
+.nav-btn.active { color: var(--accent); }
+.nav-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.screen { display: none; padding: 16px; }
+.screen.active { display: block; }
+.week-selector { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border-radius: var(--radius); padding: 12px 16px; margin-bottom: 16px; border: 1px solid var(--border); }
+.week-nav { width: 36px; height: 36px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface2); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; color: var(--text2); }
+.week-label { text-align: center; }
+.week-num { font-size: 16px; font-weight: 600; color: var(--text); }
+.week-cycle { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.prot-bar { background: var(--accent-light); border-radius: var(--radius-sm); padding: 8px 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+.prot-label { font-size: 12px; color: var(--accent-text); }
+.prot-val { font-size: 14px; font-weight: 600; color: var(--accent-text); }
+.day-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 10px; overflow: hidden; }
+.day-header { padding: 12px 14px; background: var(--surface2); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+.day-name { font-size: 15px; font-weight: 600; color: var(--text); }
+.day-arrow { font-size: 12px; color: var(--text3); transition: transform 0.2s; }
+.day-arrow.open { transform: rotate(180deg); }
+.day-meals { display: none; }
+.day-meals.open { display: block; }
+.meal-row { padding: 12px 14px; border-top: 1px solid var(--border); }
+.meal-time { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; display: flex; justify-content: space-between; }
+.meal-prot-badge { background: var(--accent-light); color: var(--accent-text); font-size: 10px; padding: 1px 6px; border-radius: 20px; font-weight: 500; }
+.meal-text { font-size: 14px; color: var(--text); line-height: 1.5; }
+.meal-note { font-size: 12px; color: var(--text2); margin-top: 4px; font-style: italic; }
+.mode-toggle { display: flex; background: var(--surface2); border-radius: var(--radius-sm); padding: 3px; margin-bottom: 16px; border: 1px solid var(--border); }
+.mode-btn { flex: 1; padding: 8px; font-size: 13px; border: none; background: none; color: var(--text2); border-radius: 6px; cursor: pointer; font-weight: 500; }
+.mode-btn.active { background: var(--surface); color: var(--accent); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.section-title { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; margin-top: 20px; }
+.section-title:first-of-type { margin-top: 0; }
+.ingredient-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 4px; }
+.ing-chip { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+.ing-chip.selected { border-color: var(--accent); background: var(--accent-light); }
+.ing-chip-icon { font-size: 18px; }
+.ing-chip-name { font-size: 13px; font-weight: 500; color: var(--text); }
+.ing-chip.selected .ing-chip-name { color: var(--accent-text); }
+.allergy-notice { background: var(--warn-light); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 16px; font-size: 12px; color: var(--warn); }
+.search-wrap { position: relative; margin-bottom: 12px; }
+.search-input { width: 100%; padding: 11px 14px 11px 38px; font-size: 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); outline: none; }
+.search-input:focus { border-color: var(--accent); }
+.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 16px; pointer-events: none; }
+.search-dropdown { position: absolute; top: calc(100% + 2px); left: 0; right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); z-index: 50; max-height: 220px; overflow-y: auto; box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+.search-item { padding: 11px 14px; font-size: 14px; color: var(--text); cursor: pointer; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border); }
+.search-item:last-child { border-bottom: none; }
+.search-item:active, .search-item.hi { background: var(--surface2); }
+.search-cat { font-size: 10px; color: var(--text3); margin-left: auto; }
+.custom-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.custom-chip { background: var(--accent-light); border: 1.5px solid var(--accent); border-radius: 20px; padding: 5px 10px; font-size: 13px; color: var(--accent-text); display: flex; align-items: center; gap: 6px; }
+.custom-chip-x { cursor: pointer; font-size: 16px; line-height: 1; opacity: 0.7; }
+.sel-count { font-size: 12px; color: var(--accent-text); background: var(--accent-light); padding: 4px 10px; border-radius: 20px; display: inline-block; margin-bottom: 14px; }
+.gen-btn { width: 100%; padding: 16px; background: var(--accent); color: white; border: none; border-radius: var(--radius); font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.gen-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.result-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 16px; margin-top: 16px; }
+.result-meal { margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.result-meal:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+.result-meal-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+.result-meal-name { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.result-meal-desc { font-size: 13px; color: var(--text2); line-height: 1.5; }
+.result-prot { display: inline-block; background: var(--accent-light); color: var(--accent-text); font-size: 11px; padding: 2px 8px; border-radius: 20px; margin-top: 6px; font-weight: 500; }
+.loading { text-align: center; padding: 30px; color: var(--text2); font-size: 14px; }
+.spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.tip-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 14px; margin-bottom: 10px; }
+.tip-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.tip-icon { font-size: 22px; }
+.tip-title { font-size: 15px; font-weight: 600; color: var(--text); }
+.tip-body { font-size: 13px; color: var(--text2); line-height: 1.6; }
+.tip-tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; margin-right: 4px; margin-top: 8px; font-weight: 500; }
+.tag-red { background: var(--red-light); color: var(--red); }
+.tag-green { background: var(--accent-light); color: var(--accent-text); }
+.tag-warn { background: var(--warn-light); color: var(--warn); }
+.tag-info { background: var(--info-light); color: var(--info); }
+.empty { text-align: center; padding: 20px; color: var(--text3); font-size: 13px; }
+.recipe-btn { margin-top: 8px; padding: 6px 12px; font-size: 12px; border: 1px solid var(--accent); border-radius: 20px; background: none; color: var(--accent); cursor: pointer; }
+.recipe-btn:active { background: var(--accent-light); }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: flex-end; }
+.modal-box { background: var(--surface); border-radius: var(--radius) var(--radius) 0 0; padding: 20px 16px calc(20px + env(safe-area-inset-bottom,10px)); width: 100%; max-height: 80vh; overflow-y: auto; }
+.modal-title { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.modal-subtitle { font-size: 12px; color: var(--text3); margin-bottom: 16px; }
+.modal-close { float: right; font-size: 22px; color: var(--text3); cursor: pointer; line-height: 1; margin-top: -2px; }
+.modal-body { font-size: 14px; color: var(--text); line-height: 1.7; white-space: pre-wrap; }
+.modal-loading { text-align: center; padding: 20px; color: var(--text2); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="header-icon">🥗</div>
+    <div>
+      <div class="header-title">Menu Wegovy</div>
+      <div class="header-sub">Adapté à ton profil · Protéines en priorité</div>
+    </div>
+  </div>
+</div>
+
+<div class="screen active" id="screen-menus">
+  <div class="week-selector">
+    <button class="week-nav" onclick="changeWeek(-1)">&#8249;</button>
+    <div class="week-label">
+      <div class="week-num" id="week-label">Semaine 1</div>
+      <div class="week-cycle" id="cycle-label">Cycle A</div>
+    </div>
+    <button class="week-nav" onclick="changeWeek(1)">&#8250;</button>
+  </div>
+  <div class="mode-toggle">
+    <button class="mode-btn active" id="btn-cook" onclick="setMode('cook')">🍳 Je cuisine</button>
+    <button class="mode-btn" id="btn-lazy" onclick="setMode('lazy')">⚡ Mode rapide</button>
+  </div>
+  <div class="prot-bar">
+    <span class="prot-label">🎯 Objectif protéines / jour</span>
+    <span class="prot-val">100–120g</span>
+  </div>
+  <div id="days-container"></div>
+</div>
+
+<div class="screen" id="screen-fridge">
+  <div class="allergy-notice">⚠️ Filtres actifs : sans noix d'arbre, sans sésame, sans pamplemousse, sans saumon, sans poitrine de poulet, sans miel.</div>
+
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" id="ing-search" type="text" placeholder="Chercher un ingrédient... (kale, concombre…)" autocomplete="off" />
+    <div class="search-dropdown" id="search-dd" style="display:none"></div>
+  </div>
+  <div class="custom-chips" id="custom-chips"></div>
+  <div id="sel-count" style="display:none"></div>
+
+  <div class="section-title">🥩 Protéines</div>
+  <div class="ingredient-grid" id="grid-proteins"></div>
+
+  <div class="section-title">🥦 Légumes</div>
+  <div class="ingredient-grid" id="grid-veggies"></div>
+
+  <div class="section-title">🌾 Féculents &amp; bases</div>
+  <div class="ingredient-grid" id="grid-carbs"></div>
+
+  <div class="section-title">🧀 Produits laitiers &amp; oeufs</div>
+  <div class="ingredient-grid" id="grid-dairy"></div>
+
+  <div class="section-title">🫙 Condiments &amp; extras</div>
+  <div class="ingredient-grid" id="grid-extras"></div>
+
+  <button class="gen-btn" id="gen-btn" onclick="generateMeals()">✨ Générer mes repas</button>
+  <div id="fridge-result"></div>
+</div>
+
+<div class="screen" id="screen-tips">
+  <div class="tip-card"><div class="tip-header"><span class="tip-icon">🔺</span><span class="tip-title">Pyramide inversée</span></div><div class="tip-body">Gros déjeuner → dîner moyen → souper symbolique. Le Wegovy coupe l'appétit en fin de journée.</div><span class="tip-tag tag-green">Wegovy</span></div>
+  <div class="tip-card"><div class="tip-header"><span class="tip-icon">💊</span><span class="tip-title">Synthroïde le matin</span></div><div class="tip-body">Attendre 30–60 min avant de manger. Éviter café, jus d'orange et soja dans la même heure que la pilule.</div><span class="tip-tag tag-warn">Timing important</span></div>
+  <div class="tip-card"><div class="tip-header"><span class="tip-icon">🎯</span><span class="tip-title">Lisdexamfetamine (Vyvanse)</span></div><div class="tip-body">Éviter vitamine C élevée (agrumes, jus) dans la même heure que la pilule — réduit l'absorption. Au dîner/souper : aucun problème.</div><span class="tip-tag tag-info">Absorption</span></div>
+  <div class="tip-card"><div class="tip-header"><span class="tip-icon">❌</span><span class="tip-title">Pamplemousse : interdit</span></div><div class="tip-body">Interagit avec la Synthroïde ET l'Amlodipine. Double raison de l'éviter.</div><span class="tip-tag tag-red">Toujours éviter</span></div>
+  <div class="tip-card"><div class="tip-header"><span class="tip-icon">🤢</span><span class="tip-title">Jour de shot Wegovy</span></div><div class="tip-body">Mange léger et peu gras. Toast + peanut butter, soupe, yogourt. Pas le jour pour un gros repas livraison.</div><span class="tip-tag tag-warn">Hebdomadaire</span></div>
+  <div class="tip-card"><div class="tip-header"><span class="tip-icon">💪</span><span class="tip-title">Protéines : priorité absolue</span></div><div class="tip-body">Le Wegovy coupe tout. Sans protéines suffisantes, tu perds du muscle. Vise 100–120g/jour.</div><span class="tip-tag tag-green">Objectif quotidien</span></div>
+  <div class="tip-card"><div class="tip-header"><span class="tip-icon">🍬</span><span class="tip-title">Envies de sucre</span></div><div class="tip-body">Yogourt grec + filet de sirop d'érable · Fruits frais · 2 carrés chocolat noir 70%+. Évite les édulcorants.</div><span class="tip-tag tag-info">Substituts intelligents</span></div>
+  <div class="tip-card"><div class="tip-header"><span class="tip-icon">⚠️</span><span class="tip-title">Tes allergies</span></div><div class="tip-body">Noix d'arbre (pistache, cajou, pacane) · Sésame · Fruits à noyau crus. Peanuts et amandes : OK.</div><span class="tip-tag tag-red">EpiPen disponible</span></div>
+</div>
+
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-menus" onclick="showScreen('menus')">
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="3" rx="1"/><rect x="3" y="10.5" width="18" height="3" rx="1"/><rect x="3" y="17" width="18" height="3" rx="1"/></svg>
+    Menus
+  </button>
+  <button class="nav-btn" id="nav-fridge" onclick="showScreen('fridge')">
+    <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="5" y1="10" x2="19" y2="10"/><line x1="9" y1="6" x2="9" y2="9"/><line x1="9" y1="14" x2="9" y2="18"/></svg>
+    Mon frigo
+  </button>
+  <button class="nav-btn" id="nav-tips" onclick="showScreen('tips')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5" fill="currentColor"/></svg>
+    Conseils
+  </button>
+</nav>
+
+<script>
+// ── MENUS DATA ──
+const MENUS = {
+  cook: [
+    { week:1, days:[
+      {name:"Lundi",dej:{t:"Omelette 3 oeufs + fromage + 2 toasts beurre de peanut",p:"~30g"},din:{t:"Cuisse de poulet grillée + riz + légumes rôtis",p:"~40g"},sou:{t:"Soupe lentilles (petit bol)",p:"~12g"}},
+      {name:"Mardi",dej:{t:"2 oeufs brouillés + jambon + toast beurre",p:"~28g"},din:{t:"Bavette de boeuf + patate douce rôtie + brocoli",p:"~38g"},sou:{t:"Yogourt grec + fruits frais",p:"~15g"}},
+      {name:"Mercredi",dej:{t:"Omelette 3 oeufs + salsa + fromage cheddar",p:"~32g"},din:{t:"Boeuf haché maison + légumes sautés + riz",p:"~42g"},sou:{t:"Fromage + 2-3 craquelins",p:"~10g"}},
+      {name:"Jeudi",dej:{t:"2 toasts beurre de peanut + 2 oeufs durs",p:"~27g"},din:{t:"Cuisse de poulet + quinoa + salade",p:"~40g"},sou:{t:"Soupe poulet maison (petit bol)",p:"~18g"}},
+      {name:"Vendredi",dej:{t:"Sandwich oeuf + fromage + jambon maison",p:"~30g"},din:{t:"Bavette ou flank steak + légumes grillés",p:"~45g"},sou:{t:"Yogourt grec + granola faible sucre",p:"~15g"}},
+      {name:"Samedi",dej:{t:"Oeufs bénédicte maison + jambon (sans hollandaise lourde)",p:"~35g"},din:{t:"Ribsteak saignant + salade César maison",p:"~50g"},sou:{t:"Fromage cottage + fruits",p:"~14g"}},
+      {name:"Dimanche",dej:{t:"Pancakes protéinés + sirop d'érable léger + bacon",p:"~28g"},din:{t:"Rôti de porc + légumes racines rôtis",p:"~42g"},sou:{t:"Restes du dîner (3-4 bouchées)",p:"~15g"}},
+    ]},
+    { week:2, days:[
+      {name:"Lundi",dej:{t:"Frittata 4 oeufs + poivrons + fromage (à préparer d'avance)",p:"~32g"},din:{t:"Pilons de poulet au four + purée de chou-fleur",p:"~38g"},sou:{t:"Yogourt grec nature",p:"~12g"}},
+      {name:"Mardi",dej:{t:"Toast pain de seigle + oeufs pochés + fromage cottage",p:"~28g"},din:{t:"Boeuf haché + pâtes + sauce tomate maison",p:"~40g"},sou:{t:"Fromage + pomme cuite ou en compote",p:"~8g"}},
+      {name:"Mercredi",dej:{t:"Omelette jambon + champignons + 2 toasts",p:"~30g"},din:{t:"Crevettes sautées à l'ail + riz + légumes",p:"~35g"},sou:{t:"Soupe minestrone (petit bol)",p:"~10g"}},
+      {name:"Jeudi",dej:{t:"2 toasts beurre de peanut + yogourt grec",p:"~27g"},din:{t:"Côtelettes de porc + patate douce + haricots verts",p:"~42g"},sou:{t:"Cottage cheese + 2 carrés chocolat noir 70%",p:"~14g"}},
+      {name:"Vendredi",dej:{t:"3 oeufs brouillés + bacon + toast",p:"~32g"},din:{t:"Tilapia grillé + riz + salsa maison",p:"~36g"},sou:{t:"Yogourt grec + fruits",p:"~12g"}},
+      {name:"Samedi",dej:{t:"Gaufres protéinées + bacon + sirop érable léger",p:"~30g"},din:{t:"Smash burgers maison + salade coleslaw",p:"~48g"},sou:{t:"Fromage cottage + granola",p:"~15g"}},
+      {name:"Dimanche",dej:{t:"Oeufs florentine maison",p:"~28g"},din:{t:"Poulet entier rôti + légumes racines",p:"~45g"},sou:{t:"Restes + yogourt",p:"~14g"}},
+    ]},
+    { week:3, days:[
+      {name:"Lundi",dej:{t:"Omelette 3 oeufs + feta + épinards + toast",p:"~30g"},din:{t:"Boeuf haché en bol coréen (riz + carottes + oeuf)",p:"~42g"},sou:{t:"Soupe lentilles corail",p:"~12g"}},
+      {name:"Mardi",dej:{t:"2 toasts beurre de peanut + 2 oeufs durs",p:"~28g"},din:{t:"Cuisse de poulet teriyaki maison + riz jasmin",p:"~40g"},sou:{t:"Yogourt grec + banane",p:"~14g"}},
+      {name:"Mercredi",dej:{t:"Sandwich grillé oeuf + jambon + fromage suisse",p:"~32g"},din:{t:"Souvlaki de porc maison + pain pita + tzatziki",p:"~40g"},sou:{t:"Fromage + 3 craquelins",p:"~10g"}},
+      {name:"Jeudi",dej:{t:"Bol déjeuner : quinoa + oeuf poché + avocat",p:"~28g"},din:{t:"Crevettes grillées + couscous + légumes grillés",p:"~36g"},sou:{t:"Cottage cheese + fruits",p:"~14g"}},
+      {name:"Vendredi",dej:{t:"3 oeufs brouillés + chorizo + toast beurre",p:"~34g"},din:{t:"Bavette marinée + frites de patate douce au four",p:"~42g"},sou:{t:"Yogourt grec + sirop érable léger",p:"~12g"}},
+      {name:"Samedi",dej:{t:"Déjeuner complet : bacon + 3 oeufs + toast + fèves au lard",p:"~38g"},din:{t:"Côtes levées au four (low and slow) + salade",p:"~50g"},sou:{t:"Quelques bouchées de fromage",p:"~8g"}},
+      {name:"Dimanche",dej:{t:"Crêpes protéinées + fromage cottage + sirop",p:"~28g"},din:{t:"Gigot d'agneau + légumes racines",p:"~48g"},sou:{t:"Restes + yogourt",p:"~14g"}},
+    ]},
+  ],
+  lazy: [
+    { week:1, days:[
+      {name:"Lundi",dej:{t:"2 toasts beurre de peanut + Oikos Triple Zero",p:"~27g"},din:{t:"Bowl Chipotle : poulet + riz + guac + légumes",p:"~42g"},sou:{t:"Yogourt grec + poignée d'amandes",p:"~18g"}},
+      {name:"Mardi",dej:{t:"Oikos Triple Zero + 2 oeufs durs préparés d'avance",p:"~30g"},din:{t:"Sous-marin dinde/poulet Subway (pain blé, légumes)",p:"~38g"},sou:{t:"Fromage + fruits",p:"~10g"}},
+      {name:"Mercredi",dej:{t:"Shake protéiné + 2 toasts beurre de peanut",p:"~35g"},din:{t:"St-Hubert : 2 cuisses + légumes (sauter les frites)",p:"~45g"},sou:{t:"Yogourt grec nature",p:"~12g"}},
+      {name:"Jeudi",dej:{t:"2 toasts beurre de peanut + 2 oeufs durs",p:"~27g"},din:{t:"Bowl sushi : thon/crevettes + riz + edamame",p:"~38g"},sou:{t:"Cottage cheese + quelques biscuits soda",p:"~14g"}},
+      {name:"Vendredi",dej:{t:"Oikos + shake protéiné si pas faim",p:"~28g"},din:{t:"Burger qualité (Five Guys, etc.) sans la sauce sucrée",p:"~45g"},sou:{t:"Fromage + fruits",p:"~10g"}},
+      {name:"Samedi",dej:{t:"Déjeuner resto : omelette jambon + toast",p:"~32g"},din:{t:"Rôtisserie IGA/Metro : cuisses + légumes côté",p:"~48g"},sou:{t:"Yogourt grec + 2 carrés chocolat noir 70%",p:"~13g"}},
+      {name:"Dimanche",dej:{t:"2 toasts beurre de peanut + caramel léger",p:"~22g",n:"🎉 Dimanche — saveur sans catastrophe"},din:{t:"Commande famille : smoked meat, souvlaki ou sushi",p:"~45g"},sou:{t:"Restes + yogourt",p:"~15g"}},
+    ]},
+    { week:2, days:[
+      {name:"Lundi",dej:{t:"Oikos Triple Zero + shake protéiné + café",p:"~32g"},din:{t:"Poke bowl thon/crevettes du comptoir",p:"~40g"},sou:{t:"Fromage cottage + pomme en compote",p:"~12g"}},
+      {name:"Mardi",dej:{t:"2 toasts beurre de peanut + yogourt grec",p:"~27g"},din:{t:"Rôtisserie : cuisses de poulet + salade du comptoir",p:"~45g"},sou:{t:"Yogourt grec + granola faible sucre",p:"~14g"}},
+      {name:"Mercredi",dej:{t:"Shake protéiné + toast peanut butter",p:"~30g"},din:{t:"St-Hubert ou Swiss Chalet : cuisse + légumes",p:"~42g"},sou:{t:"Fromage + 2 craquelins",p:"~10g"}},
+      {name:"Jeudi",dej:{t:"2 oeufs durs + toast beurre de peanut + Oikos",p:"~30g"},din:{t:"Souvlaki de porc (restaurant grec) + salade",p:"~40g"},sou:{t:"Yogourt grec nature",p:"~12g"}},
+      {name:"Vendredi",dej:{t:"Oikos Triple Zero + shake si pas faim",p:"~28g"},din:{t:"Steak frites restaurant — frites petite portion",p:"~45g"},sou:{t:"Quelques bouchées fromage + fruits",p:"~8g"}},
+      {name:"Samedi",dej:{t:"Déjeuner café : omelette ou plat oeufs",p:"~30g"},din:{t:"Smoked meat sandwich (Deli) + soupe ou salade",p:"~40g"},sou:{t:"Yogourt grec + sirop érable",p:"~12g"}},
+      {name:"Dimanche",dej:{t:"Toast beurre de peanut + caramel + café",p:"~20g",n:"🎉 Dimanche matin tranquille"},din:{t:"Commande pizza protéinée (2 pointes max)",p:"~35g"},sou:{t:"Oikos + fruits",p:"~15g"}},
+    ]},
+    { week:3, days:[
+      {name:"Lundi",dej:{t:"Shake protéiné + 2 toasts beurre de peanut",p:"~35g"},din:{t:"Chipotle bowl : steak + haricots noirs + légumes",p:"~42g"},sou:{t:"Cottage cheese + amandes",p:"~16g"}},
+      {name:"Mardi",dej:{t:"Oikos + 2 oeufs durs + café",p:"~28g"},din:{t:"Rôtisserie maison (IGA) : pilons + légumes grillés",p:"~40g"},sou:{t:"Yogourt grec nature",p:"~12g"}},
+      {name:"Mercredi",dej:{t:"2 toasts peanut butter + yogourt grec",p:"~27g"},din:{t:"Poke bowl crevettes + edamame + riz brun",p:"~38g"},sou:{t:"Fromage + fruits",p:"~10g"}},
+      {name:"Jeudi",dej:{t:"Shake protéiné + toast beurre de peanut",p:"~30g"},din:{t:"Sous-marin thon (Subway) + légumes + fromage",p:"~36g"},sou:{t:"Yogourt grec + 2 carrés chocolat noir",p:"~13g"}},
+      {name:"Vendredi",dej:{t:"Oikos Triple Zero + café + 2 oeufs durs",p:"~30g"},din:{t:"Burger protéiné (double patty) restaurant",p:"~48g"},sou:{t:"Cottage cheese + granola",p:"~14g"}},
+      {name:"Samedi",dej:{t:"Déjeuner restaurant : assiette oeufs + viande",p:"~35g"},din:{t:"Smash burgers livraison + petite salade côté",p:"~46g"},sou:{t:"Yogourt grec + fruits",p:"~12g"}},
+      {name:"Dimanche",dej:{t:"Toast beurre de peanut + caramel léger + café",p:"~20g",n:"🎉 Dimanche sans prise de tête"},din:{t:"Rôtisserie complète famille + légumes",p:"~50g"},sou:{t:"Restes + yogourt",p:"~12g"}},
+    ]},
+  ]
+};
+
+let currentWeek = 0;
+let currentMode = 'cook';
+
+function changeWeek(dir) {
+  currentWeek = (currentWeek + dir + 3) % 3;
+  renderMenu();
+}
+function setMode(m) {
+  currentMode = m;
+  document.getElementById('btn-cook').classList.toggle('active', m==='cook');
+  document.getElementById('btn-lazy').classList.toggle('active', m==='lazy');
+  renderMenu();
+}
+function renderMenu() {
+  const data = MENUS[currentMode][currentWeek];
+  const cycles = ['A','B','C'];
+  document.getElementById('week-label').textContent = 'Semaine ' + (currentWeek+1);
+  document.getElementById('cycle-label').textContent = 'Cycle ' + cycles[currentWeek] + ' · ' + (currentMode==='cook'?'Je cuisine':'Mode rapide');
+  const c = document.getElementById('days-container');
+  c.innerHTML = data.days.map((day,i) => `
+    <div class="day-card">
+      <div class="day-header" onclick="toggleDay(${i})">
+        <span class="day-name">${day.name}</span>
+        <span class="day-arrow" id="arr-${i}">&#9662;</span>
+      </div>
+      <div class="day-meals" id="dm-${i}">
+        <div class="meal-row">
+          <div class="meal-time">Déjeuner <span class="meal-prot-badge">${day.dej.p} protéines</span></div>
+          <div class="meal-text">${day.dej.t}</div>
+          ${day.dej.n?`<div class="meal-note">${day.dej.n}</div>`:''}
+          <button class="recipe-btn" onclick="getRecipe(event,'${escQ(day.dej.t)}')">👨‍🍳 Comment préparer</button>
+        </div>
+        <div class="meal-row">
+          <div class="meal-time">Dîner <span class="meal-prot-badge">${day.din.p} protéines</span></div>
+          <div class="meal-text">${day.din.t}</div>
+          <button class="recipe-btn" onclick="getRecipe(event,'${escQ(day.din.t)}')">👨‍🍳 Comment préparer</button>
+        </div>
+        <div class="meal-row">
+          <div class="meal-time">Souper <span class="meal-prot-badge">${day.sou.p} protéines</span></div>
+          <div class="meal-text">${day.sou.t}</div>
+          <button class="recipe-btn" onclick="getRecipe(event,'${escQ(day.sou.t)}')">👨‍🍳 Comment préparer</button>
+        </div>
+      </div>
+    </div>`).join('');
+  const days = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  const todayName = days[new Date().getDay()];
+  const todayIdx = data.days.findIndex(d => d.name === todayName);
+  if (todayIdx >= 0) toggleDay(todayIdx);
+}
+function toggleDay(i) {
+  const m = document.getElementById('dm-'+i);
+  const a = document.getElementById('arr-'+i);
+  const open = m.classList.contains('open');
+  m.classList.toggle('open', !open);
+  a.classList.toggle('open', !open);
+}
+
+// ── FRIDGE DATA ──
+const ALL = [
+  {id:'chicken_thigh',e:'🍗',n:'Cuisse/pilon poulet',c:'proteins'},
+  {id:'beef_ground',e:'🥩',n:'Boeuf haché',c:'proteins'},
+  {id:'steak',e:'🥩',n:'Steak/bavette',c:'proteins'},
+  {id:'pork',e:'🥩',n:'Porc (côtelette/filet)',c:'proteins'},
+  {id:'eggs',e:'🥚',n:'Oeufs',c:'proteins'},
+  {id:'shrimp',e:'🍤',n:'Crevettes',c:'proteins'},
+  {id:'tuna_can',e:'🫙',n:'Thon en canne',c:'proteins'},
+  {id:'ham',e:'🥓',n:'Jambon/charcuterie',c:'proteins'},
+  {id:'bacon',e:'🥓',n:'Bacon',c:'proteins'},
+  {id:'tilapia',e:'🐟',n:'Tilapia/flétan',c:'proteins'},
+  {id:'lamb',e:'🥩',n:'Agneau',c:'proteins'},
+  {id:'turkey',e:'🍗',n:'Dinde',c:'proteins'},
+  {id:'sausage',e:'🌭',n:'Saucisse/merguez',c:'proteins'},
+  {id:'chorizo',e:'🌭',n:'Chorizo',c:'proteins'},
+  {id:'scallops',e:'🍤',n:'Pétoncles',c:'proteins'},
+  {id:'broccoli',e:'🥦',n:'Brocoli',c:'veggies'},
+  {id:'peppers',e:'🫑',n:'Poivrons',c:'veggies'},
+  {id:'spinach',e:'🥬',n:'Épinards',c:'veggies'},
+  {id:'mushrooms',e:'🍄',n:'Champignons',c:'veggies'},
+  {id:'tomatoes',e:'🍅',n:'Tomates',c:'veggies'},
+  {id:'onions',e:'🧅',n:'Oignons',c:'veggies'},
+  {id:'carrots',e:'🥕',n:'Carottes',c:'veggies'},
+  {id:'zucchini',e:'🥒',n:'Courgette',c:'veggies'},
+  {id:'salad',e:'🥗',n:'Laitue/roquette',c:'veggies'},
+  {id:'sweet_potato',e:'🍠',n:'Patate douce',c:'veggies'},
+  {id:'kale',e:'🥬',n:'Kale (chou frisé)',c:'veggies'},
+  {id:'cucumber',e:'🥒',n:'Concombre',c:'veggies'},
+  {id:'radish',e:'🫛',n:'Radis',c:'veggies'},
+  {id:'celery',e:'🥬',n:'Céleri',c:'veggies'},
+  {id:'asparagus',e:'🥦',n:'Asperges',c:'veggies'},
+  {id:'cauliflower',e:'🥦',n:'Chou-fleur',c:'veggies'},
+  {id:'cabbage',e:'🥬',n:'Chou vert/rouge',c:'veggies'},
+  {id:'green_beans',e:'🫛',n:'Haricots verts',c:'veggies'},
+  {id:'eggplant',e:'🍆',n:'Aubergine',c:'veggies'},
+  {id:'avocado',e:'🥑',n:'Avocat',c:'veggies'},
+  {id:'leek',e:'🥬',n:'Poireau',c:'veggies'},
+  {id:'rice',e:'🍚',n:'Riz',c:'carbs'},
+  {id:'pasta',e:'🍝',n:'Pâtes',c:'carbs'},
+  {id:'bread',e:'🍞',n:'Pain/toast',c:'carbs'},
+  {id:'quinoa',e:'🌾',n:'Quinoa',c:'carbs'},
+  {id:'potato',e:'🥔',n:'Pommes de terre',c:'carbs'},
+  {id:'lentils',e:'🫘',n:'Lentilles',c:'carbs'},
+  {id:'chickpeas',e:'🫘',n:'Pois chiches',c:'carbs'},
+  {id:'black_beans',e:'🫘',n:'Haricots noirs',c:'carbs'},
+  {id:'oats',e:'🌾',n:"Flocons d'avoine",c:'carbs'},
+  {id:'couscous',e:'🌾',n:'Couscous',c:'carbs'},
+  {id:'pita',e:'🫓',n:'Pain pita',c:'carbs'},
+  {id:'greek_yogurt',e:'🥛',n:'Yogourt grec',c:'dairy'},
+  {id:'cheese',e:'🧀',n:'Fromage (cheddar etc.)',c:'dairy'},
+  {id:'cottage',e:'🥣',n:'Fromage cottage',c:'dairy'},
+  {id:'milk',e:'🥛',n:'Lait',c:'dairy'},
+  {id:'butter',e:'🧈',n:'Beurre',c:'dairy'},
+  {id:'feta',e:'🧀',n:'Feta',c:'dairy'},
+  {id:'parmesan',e:'🧀',n:'Parmesan',c:'dairy'},
+  {id:'sour_cream',e:'🥛',n:'Crème sure',c:'dairy'},
+  {id:'peanut_butter',e:'🥜',n:'Beurre de peanut',c:'extras'},
+  {id:'olive_oil',e:'🫙',n:"Huile d'olive",c:'extras'},
+  {id:'garlic',e:'🧄',n:'Ail',c:'extras'},
+  {id:'salsa',e:'🫙',n:'Salsa/sauce tomate',c:'extras'},
+  {id:'soy_sauce',e:'🫙',n:'Sauce soya',c:'extras'},
+  {id:'maple',e:'🍁',n:"Sirop d'érable",c:'extras'},
+  {id:'caramel',e:'🍯',n:'Caramel',c:'extras'},
+  {id:'dark_choc',e:'🍫',n:'Chocolat noir 70%+',c:'extras'},
+  {id:'lemon',e:'🍋',n:'Citron',c:'extras'},
+  {id:'dijon',e:'🫙',n:'Moutarde de Dijon',c:'extras'},
+  {id:'hot_sauce',e:'🌶️',n:'Sauce piquante',c:'extras'},
+  {id:'bbq_sauce',e:'🫙',n:'Sauce BBQ',c:'extras'},
+  {id:'teriyaki',e:'🫙',n:'Sauce teriyaki',c:'extras'},
+  {id:'herbs',e:'🌿',n:'Herbes fraîches',c:'extras'},
+  {id:'granola',e:'🥣',n:'Granola faible sucre',c:'extras'},
+  {id:'protein_powder',e:'💪',n:'Poudre protéinée',c:'extras'},
+  {id:'almond_butter',e:'🥜',n:"Beurre d'amande",c:'extras'},
+];
+
+const PRESETS = {
+  proteins: ['chicken_thigh','beef_ground','steak','pork','eggs','shrimp','tuna_can','ham','bacon','tilapia'],
+  veggies: ['broccoli','peppers','spinach','mushrooms','tomatoes','onions','carrots','zucchini','salad','sweet_potato'],
+  carbs: ['rice','pasta','bread','quinoa','potato','lentils'],
+  dairy: ['greek_yogurt','cheese','cottage','milk','butter'],
+  extras: ['peanut_butter','olive_oil','garlic','salsa','soy_sauce','maple','caramel','dark_choc'],
+};
+
+const CAT_LABELS = {proteins:'Protéines',veggies:'Légumes',carbs:'Féculents',dairy:'Produits laitiers',extras:'Extras'};
+
+const selected = new Set();
+const customs = new Map();
+let hiIdx = -1;
+let srResults = [];
+
+function norm(s) { return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+
+function renderIngredients() {
+  Object.entries(PRESETS).forEach(([cat, ids]) => {
+    const grid = document.getElementById('grid-' + cat);
+    if (!grid) return;
+    grid.innerHTML = ids.map(id => {
+      const ing = ALL.find(x => x.id === id);
+      if (!ing) return '';
+      const sel = selected.has(id);
+      return '<div class="ing-chip' + (sel?' selected':'') + '" onclick="toggleIng(\'' + id + '\',this)">' +
+        '<span class="ing-chip-icon">' + ing.e + '</span>' +
+        '<span class="ing-chip-name">' + ing.n + '</span></div>';
+    }).join('');
+  });
+}
+
+function toggleIng(id, el) {
+  if (selected.has(id)) { selected.delete(id); el.classList.remove('selected'); }
+  else { selected.add(id); el.classList.add('selected'); }
+  updateCount();
+}
+
+function updateCount() {
+  const el = document.getElementById('sel-count');
+  const n = selected.size;
+  if (n === 0) { el.style.display='none'; return; }
+  el.className = 'sel-count';
+  el.style.display = 'inline-block';
+  el.textContent = n + ' ingrédient' + (n>1?'s':'') + ' sélectionné' + (n>1?'s':'');
+}
+
+function renderCustomChips() {
+  const wrap = document.getElementById('custom-chips');
+  if (customs.size === 0) { wrap.innerHTML=''; return; }
+  wrap.innerHTML = [...customs.entries()].map(([id,ing]) =>
+    '<div class="custom-chip"><span>' + ing.e + '</span><span>' + ing.n + '</span>' +
+    '<span class="custom-chip-x" onclick="removeCustom(\'' + id + '\')">×</span></div>'
+  ).join('');
+}
+
+function removeCustom(id) {
+  customs.delete(id); selected.delete(id);
+  renderCustomChips(); updateCount();
+}
+
+document.getElementById('ing-search').addEventListener('input', function() {
+  const q = norm(this.value.trim());
+  const dd = document.getElementById('search-dd');
+  hiIdx = -1;
+  if (q.length < 2) { dd.style.display='none'; srResults=[]; return; }
+  srResults = ALL.filter(i => !selected.has(i.id) && norm(i.n).includes(q)).slice(0,8);
+  const rawQ = this.value.trim();
+  const exact = ALL.find(i => norm(i.n)===q);
+  if (!exact && rawQ.length>=2) {
+    srResults.push({id:'__c__'+rawQ, e:'➕', n:'Ajouter "'+rawQ+'"', c:'custom', cn:rawQ});
+  }
+  if (srResults.length===0) { dd.style.display='none'; return; }
+  dd.style.display='block';
+  dd.innerHTML = srResults.map((item,idx) =>
+    '<div class="search-item" id="si-'+idx+'" onclick="pickItem('+idx+')">' +
+    item.e + ' ' + item.n +
+    (item.c!=='custom'?' <span class="search-cat">'+CAT_LABELS[item.c]+'</span>':'') +
+    '</div>'
+  ).join('');
+});
+
+document.getElementById('ing-search').addEventListener('keydown', function(e) {
+  const dd = document.getElementById('search-dd');
+  if (dd.style.display==='none') return;
+  if (e.key==='ArrowDown') { hiIdx=Math.min(hiIdx+1,srResults.length-1); updateHi(); e.preventDefault(); }
+  else if (e.key==='ArrowUp') { hiIdx=Math.max(hiIdx-1,0); updateHi(); e.preventDefault(); }
+  else if (e.key==='Enter' && hiIdx>=0) { pickItem(hiIdx); e.preventDefault(); }
+  else if (e.key==='Escape') { dd.style.display='none'; }
+});
+
+function updateHi() {
+  document.querySelectorAll('.search-item').forEach((el,i)=>el.classList.toggle('hi',i===hiIdx));
+}
+
+function pickItem(idx) {
+  const item = srResults[idx];
+  if (!item) return;
+  if (item.c==='custom') {
+    customs.set(item.id, {n:item.cn, e:'🍽️'});
+    selected.add(item.id);
+    renderCustomChips();
+  } else {
+    selected.add(item.id);
+    renderIngredients();
+  }
+  document.getElementById('ing-search').value='';
+  document.getElementById('search-dd').style.display='none';
+  srResults=[];
+  updateCount();
+}
+
+async function generateMeals() {
+  if (selected.size===0) {
+    document.getElementById('fridge-result').innerHTML='<div class="empty">Sélectionne au moins un ingrédient !</div>';
+    return;
+  }
+  const btn = document.getElementById('gen-btn');
+  btn.disabled=true;
+  document.getElementById('fridge-result').innerHTML='<div class="loading"><div class="spinner"></div>Claude prépare tes repas...</div>';
+
+  const names = [...selected].map(id => {
+    const found = ALL.find(i=>i.id===id);
+    if (found) return found.n;
+    const c = customs.get(id);
+    return c ? c.n : null;
+  }).filter(Boolean);
+
+  const prompt = `Tu es un nutritionniste spécialisé dans les patients sous Wegovy (sémaglutide).
+
+Profil du patient :
+- Médicaments : Wegovy 2.4mg, Synthroïde 0.137mg, Indapamide, Amlodipine 2.5mg, Lisdexamfetamine 60mg
+- Allergies STRICTES : noix d'arbre (pistaches, cajous, pacanes, noix de Grenoble), sésame. Peanuts et amandes : OK.
+- Éviter absolument : pamplemousse, saumon, poitrine de poulet, miel
+- Pas de vitamine C élevée ni agrumes au déjeuner (interaction Lisdexamfetamine)
+- Pas de soja en grande quantité au déjeuner (interaction Synthroïde)
+- Structure : GROS déjeuner protéiné, dîner moyen, souper très léger (3-4 bouchées max)
+- Objectif : 100-120g de protéines par jour
+- Préférences : viandes juteuses, textures fondantes, sauces enrobantes, cuisson saignant/médium
+
+Ingrédients disponibles : ${names.join(', ')}
+
+Génère 3 repas (déjeuner, dîner, souper) en utilisant SEULEMENT ces ingrédients. Pour chaque repas : nom court, description simple 2-3 lignes, protéines estimées.
+
+Réponds UNIQUEMENT en JSON valide sans markdown :
+{"meals":[{"type":"Déjeuner","name":"...","description":"...","protein":"..."},{"type":"Dîner","name":"...","description":"...","protein":"..."},{"type":"Souper","name":"...","description":"...","protein":"..."}]}`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':'VOTRE_CLE_API_ICI','anthropic-version':'2023-06-01'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+    });
+    const data = await resp.json();
+    const text = (data.content||[]).find(b=>b.type==='text')?.text||'';
+    const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
+    document.getElementById('fridge-result').innerHTML = '<div class="result-card">' +
+      parsed.meals.map(m =>
+        '<div class="result-meal"><div class="result-meal-label">'+m.type+'</div>' +
+        '<div class="result-meal-name">'+m.name+'</div>' +
+        '<div class="result-meal-desc">'+m.description+'</div>' +
+        '<span class="result-prot">💪 '+m.protein+' protéines</span></div>'
+      ).join('') + '</div>';
+  } catch(e) {
+    document.getElementById('fridge-result').innerHTML='<div class="loading" style="color:var(--red)">Erreur de connexion. Vérifie ton internet et réessaie.</div>';
+  }
+  btn.disabled=false;
+}
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+}
+
+renderMenu();
+renderIngredients();
+
+function escQ(s) { return s.replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+
+function getRecipe(e, mealName) {
+  e.stopPropagation();
+  showModal(mealName);
+}
+
+function showModal(mealName) {
+  let overlay = document.getElementById('recipe-modal');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'recipe-modal';
+    overlay.className = 'modal-overlay';
+    overlay.onclick = function(e) { if(e.target===overlay) closeModal(); };
+    document.body.appendChild(overlay);
+  }
+  overlay.style.display = 'flex';
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <span class="modal-close" onclick="closeModal()">×</span>
+      <div class="modal-title">${mealName}</div>
+      <div class="modal-subtitle">Recette adaptée à ton profil</div>
+      <div class="modal-loading"><div class="spinner"></div>Génération en cours...</div>
+    </div>`;
+
+  const prompt = `Tu es un chef cuisinier qui connaît le profil nutritionnel de ce patient :
+- Préférences : viandes juteuses et tendres, textures fondantes, sauces enrobantes, cuisson saignant/médium pour les viandes rouges
+- Allergies : noix d'arbre (pistaches, cajous, pacanes), sésame. Peanuts et amandes OK.
+- Éviter : pamplemousse, saumon, poitrine de poulet, miel
+- Sous Wegovy : portions modérées, pas trop gras d'un coup
+- Objectif : recette simple, max 30 minutes, résultat juteux et savoureux
+
+Donne une recette courte et pratique pour : "${mealName}"
+
+Format :
+- Ingrédients (liste courte)
+- Étapes (3-5 étapes max, simples et précises)
+- Astuce du chef (1 ligne)
+
+Sois direct et concis. Pas d'intro, pas de conclusion.`;
+
+  fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':'VOTRE_CLE_API_ICI','anthropic-version':'2023-06-01'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,messages:[{role:'user',content:prompt}]})
+  }).then(r=>r.json()).then(data=>{
+    const text = (data.content||[]).find(b=>b.type==='text')?.text||'Erreur — réessaie.';
+    document.querySelector('#recipe-modal .modal-box').innerHTML = `
+      <span class="modal-close" onclick="closeModal()">×</span>
+      <div class="modal-title">${mealName}</div>
+      <div class="modal-subtitle">Recette adaptée à ton profil</div>
+      <div class="modal-body">${text}</div>`;
+  }).catch(()=>{
+    document.querySelector('#recipe-modal .modal-box').innerHTML = `
+      <span class="modal-close" onclick="closeModal()">×</span>
+      <div class="modal-title">${mealName}</div>
+      <div class="modal-body" style="color:var(--red)">Erreur de connexion. Vérifie ton internet.</div>`;
+  });
+}
+
+function closeModal() {
+  const m = document.getElementById('recipe-modal');
+  if (m) m.style.display='none';
+}
+</script>
+</body>
+</html>
