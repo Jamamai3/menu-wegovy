@@ -553,7 +553,7 @@ Réponds UNIQUEMENT en JSON valide sans markdown :
     const resp = await fetch('/.netlify/functions/claude', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2048,messages:[{role:'user',content:prompt}]})
     });
     const data = await resp.json();
     const text = (data.content||[]).find(b=>b.type==='text')?.text||'';
