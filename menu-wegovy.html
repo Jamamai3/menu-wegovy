@@ -557,7 +557,6 @@ Réponds UNIQUEMENT en JSON valide sans markdown :
     });
     const data = await resp.json();
     const text = (data.content||[]).find(b=>b.type==='text')?.text||'';
-    console.log('Response:', text);
     const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
     document.getElementById('fridge-result').innerHTML = '<div class="result-card">' +
       parsed.meals.map(m =>
@@ -625,7 +624,7 @@ Sois direct et concis. Pas d'intro, pas de conclusion.`;
 
   fetch('/.netlify/functions/claude', {
     method:'POST',
-    headers:{'Content-Type':'application/json','x-api-key':'VOTRE_CLE_API_ICI','anthropic-version':'2023-06-01'},
+    headers:{'Content-Type':'application/json'},
     body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,messages:[{role:'user',content:prompt}]})
   }).then(r=>r.json()).then(data=>{
     const text = (data.content||[]).find(b=>b.type==='text')?.text||'Erreur — réessaie.';
