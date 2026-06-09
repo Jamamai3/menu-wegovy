@@ -566,8 +566,9 @@ Réponds UNIQUEMENT en JSON valide sans markdown :
         '<span class="result-prot">💪 '+m.protein+' protéines</span></div>'
       ).join('') + '</div>';
   } catch(e) {
-    document.getElementById('fridge-result').innerHTML='<div class="loading" style="color:var(--red)">Erreur de connexion. Vérifie ton internet et réessaie.</div>';
-  }
+    document.getElementById('fridge-result').innerHTML='<div class="loading" style="color:var(--red)">Erreur: '+e.message+'</div>';
+    btn.disabled=false;
+}
   btn.disabled=false;
 }
 
