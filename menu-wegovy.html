@@ -557,7 +557,10 @@ Réponds UNIQUEMENT en JSON valide sans markdown :
     });
     const data = await resp.json();
     const text = (data.content||[]).find(b=>b.type==='text')?.text||'';
-    const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
+    const text = (data.content||[]).find(b=>b.type==='text')?.text||'';
+    console.log('RAW:', text);
+    const match = text.match(/\{[\s\S]*\}/);
+    const parsed = JSON.parse(match ? match[0] : text);
     document.getElementById('fridge-result').innerHTML = '<div class="result-card">' +
       parsed.meals.map(m =>
         '<div class="result-meal"><div class="result-meal-label">'+m.type+'</div>' +
