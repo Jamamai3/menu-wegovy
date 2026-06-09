@@ -107,15 +107,15 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .tag-warn { background: var(--warn-light); color: var(--warn); }
 .tag-info { background: var(--info-light); color: var(--info); }
 .empty { text-align: center; padding: 20px; color: var(--text3); font-size: 13px; }
-.recipe-btn { margin-top: 8px; padding: 6px 12px; font-size: 12px; border: 1px solid var(--accent); border-radius: 20px; background: none; color: var(--accent); cursor: pointer; }
-.recipe-btn:active { background: var(--accent-light); }
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: flex-end; }
-.modal-box { background: var(--surface); border-radius: var(--radius) var(--radius) 0 0; padding: 20px 16px calc(20px + env(safe-area-inset-bottom,10px)); width: 100%; max-height: 80vh; overflow-y: auto; }
-.modal-title { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
-.modal-subtitle { font-size: 12px; color: var(--text3); margin-bottom: 16px; }
-.modal-close { float: right; font-size: 22px; color: var(--text3); cursor: pointer; line-height: 1; margin-top: -2px; }
-.modal-body { font-size: 14px; color: var(--text); line-height: 1.7; white-space: pre-wrap; }
-.modal-loading { text-align: center; padding: 20px; color: var(--text2); font-size: 14px; }
+
+
+
+
+
+
+
+
+
 </style>
 </head>
 <body>
@@ -299,17 +299,17 @@ function renderMenu() {
           <div class="meal-time">Déjeuner <span class="meal-prot-badge">${day.dej.p} protéines</span></div>
           <div class="meal-text">${day.dej.t}</div>
           ${day.dej.n?`<div class="meal-note">${day.dej.n}</div>`:''}
-          <button class="recipe-btn" onclick="getRecipe(event,'${escQ(day.dej.t)}')">👨‍🍳 Comment préparer</button>
+
         </div>
         <div class="meal-row">
           <div class="meal-time">Dîner <span class="meal-prot-badge">${day.din.p} protéines</span></div>
           <div class="meal-text">${day.din.t}</div>
-          <button class="recipe-btn" onclick="getRecipe(event,'${escQ(day.din.t)}')">👨‍🍳 Comment préparer</button>
+
         </div>
         <div class="meal-row">
           <div class="meal-time">Souper <span class="meal-prot-badge">${day.sou.p} protéines</span></div>
           <div class="meal-text">${day.sou.t}</div>
-          <button class="recipe-btn" onclick="getRecipe(event,'${escQ(day.sou.t)}')">👨‍🍳 Comment préparer</button>
+
         </div>
       </div>
     </div>`).join('');
@@ -553,11 +553,10 @@ Réponds UNIQUEMENT en JSON valide sans markdown :
     const resp = await fetch('/.netlify/functions/claude', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt}]})
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
     });
     const data = await resp.json();
     const text = (data.content||[]).find(b=>b.type==='text')?.text||'';
-    console.log('Clean:', text);
     const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
     document.getElementById('fridge-result').innerHTML = '<div class="result-card">' +
       parsed.meals.map(m =>
@@ -567,8 +566,7 @@ Réponds UNIQUEMENT en JSON valide sans markdown :
         '<span class="result-prot">💪 '+m.protein+' protéines</span></div>'
       ).join('') + '</div>';
   } catch(e) {
-    console.log('ERREUR:', e.message, e);
-    document.getElementById('fridge-result').innerHTML='<div class="loading" style="color:var(--red)">Erreur: '+e.message+'</div>';
+    document.getElementById('fridge-result').innerHTML='<div class="loading" style="color:var(--red)">Erreur de connexion. Vérifie ton internet et réessaie.</div>';
   }
   btn.disabled=false;
 }
@@ -583,70 +581,7 @@ function showScreen(name) {
 renderMenu();
 renderIngredients();
 
-function escQ(s) { return s.replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
 
-function getRecipe(e, mealName) {
-  e.stopPropagation();
-  showModal(mealName);
-}
-
-function showModal(mealName) {
-  let overlay = document.getElementById('recipe-modal');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'recipe-modal';
-    overlay.className = 'modal-overlay';
-    overlay.onclick = function(e) { if(e.target===overlay) closeModal(); };
-    document.body.appendChild(overlay);
-  }
-  overlay.style.display = 'flex';
-  overlay.innerHTML = `
-    <div class="modal-box">
-      <span class="modal-close" onclick="closeModal()">×</span>
-      <div class="modal-title">${mealName}</div>
-      <div class="modal-subtitle">Recette adaptée à ton profil</div>
-      <div class="modal-loading"><div class="spinner"></div>Génération en cours...</div>
-    </div>`;
-
-  const prompt = `Tu es un chef cuisinier qui connaît le profil nutritionnel de ce patient :
-- Préférences : viandes juteuses et tendres, textures fondantes, sauces enrobantes, cuisson saignant/médium pour les viandes rouges
-- Allergies : noix d'arbre (pistaches, cajous, pacanes), sésame. Peanuts et amandes OK.
-- Éviter : pamplemousse, saumon, poitrine de poulet, miel
-- Sous Wegovy : portions modérées, pas trop gras d'un coup
-- Objectif : recette simple, max 30 minutes, résultat juteux et savoureux
-
-Donne une recette courte et pratique pour : "${mealName}"
-
-Format :
-- Ingrédients (liste courte)
-- Étapes (3-5 étapes max, simples et précises)
-- Astuce du chef (1 ligne)
-
-Sois direct et concis. Pas d'intro, pas de conclusion.`;
-
-  fetch('/.netlify/functions/claude', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt}]})
-  }).then(r=>r.json()).then(data=>{
-    const text = (data.content||[]).find(b=>b.type==='text')?.text||'Erreur — réessaie.';
-    document.querySelector('#recipe-modal .modal-box').innerHTML = `
-      <span class="modal-close" onclick="closeModal()">×</span>
-      <div class="modal-title">${mealName}</div>
-      <div class="modal-subtitle">Recette adaptée à ton profil</div>
-      <div class="modal-body">${text}</div>`;
-  }).catch(()=>{
-    document.querySelector('#recipe-modal .modal-box').innerHTML = `
-      <span class="modal-close" onclick="closeModal()">×</span>
-      <div class="modal-title">${mealName}</div>
-      <div class="modal-body" style="color:var(--red)">Erreur de connexion. Vérifie ton internet.</div>`;
-  });
-}
-
-function closeModal() {
-  const m = document.getElementById('recipe-modal');
-  if (m) m.style.display='none';
-}
 </script>
 </body>
 </html>
