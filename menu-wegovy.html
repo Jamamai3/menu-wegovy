@@ -550,7 +550,7 @@ Réponds UNIQUEMENT en JSON valide sans markdown :
 {"meals":[{"type":"Déjeuner","name":"...","description":"...","protein":"..."},{"type":"Dîner","name":"...","description":"...","protein":"..."},{"type":"Souper","name":"...","description":"...","protein":"..."}]}`;
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch('/.netlify/functions/claude', {
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':'VOTRE_CLE_API_ICI','anthropic-version':'2023-06-01'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
@@ -622,7 +622,7 @@ Format :
 
 Sois direct et concis. Pas d'intro, pas de conclusion.`;
 
-  fetch('https://api.anthropic.com/v1/messages', {
+  fetch('/.netlify/functions/claude', {
     method:'POST',
     headers:{'Content-Type':'application/json','x-api-key':'VOTRE_CLE_API_ICI','anthropic-version':'2023-06-01'},
     body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,messages:[{role:'user',content:prompt}]})
