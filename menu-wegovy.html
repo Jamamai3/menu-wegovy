@@ -556,8 +556,9 @@ Réponds UNIQUEMENT en JSON valide sans markdown :
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
     });
     const data = await resp.json();
-    const text = (data.content||[]).find(b=>b.type==='text')?.text||'';
-    const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
+const text = (data.content||[]).find(b=>b.type==='text')?.text||'';
+console.log('Response:', text);
+const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
     document.getElementById('fridge-result').innerHTML = '<div class="result-card">' +
       parsed.meals.map(m =>
         '<div class="result-meal"><div class="result-meal-label">'+m.type+'</div>' +
