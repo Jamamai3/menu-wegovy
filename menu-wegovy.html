@@ -553,7 +553,7 @@ Réponds UNIQUEMENT en JSON valide sans markdown :
     const resp = await fetch('/.netlify/functions/claude', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt}]})
     });
     const data = await resp.json();
     const text = (data.content||[]).find(b=>b.type==='text')?.text||'';
@@ -627,7 +627,7 @@ Sois direct et concis. Pas d'intro, pas de conclusion.`;
   fetch('/.netlify/functions/claude', {
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,messages:[{role:'user',content:prompt}]})
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt}]})
   }).then(r=>r.json()).then(data=>{
     const text = (data.content||[]).find(b=>b.type==='text')?.text||'Erreur — réessaie.';
     document.querySelector('#recipe-modal .modal-box').innerHTML = `
